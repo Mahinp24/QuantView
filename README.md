@@ -3,66 +3,89 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Stock tickers
+# ------------------------
+# STOCK LIST
+# ------------------------
 stocks = {
     "Apple": "AAPL",
     "Amazon": "AMZN",
     "Nvidia": "NVDA",
     "Google": "GOOGL",
     "Walmart": "WMT",
-    "Louis Vuitton": "LVMUY",
+    "Louis Vuitton": "MC.PA",
     "Tesla": "TSLA",
     "JP Morgan": "JPM",
     "Costco": "COST",
     "Netflix": "NFLX"
 }
 
+# ------------------------
+# DOWNLOAD HISTORICAL DATA
+# ------------------------
 start_date = "2026-03-01"
 end_date = "2026-03-30"
 
-def get_stock_data(ticker):
-    data = yf.download(ticker, start=start_date, end=end_date)
-    return data
+data = {}
+for name, ticker in stocks.items():
+    stock_data = yf.download(ticker, start=start_date, end=end_date)
+    data[name] = stock_data['Adj Close']
 
-def calculate_daily_returns(data):
-    data["Daily Return"] = data["Adj Close"].pct_change()
-    return data
+# Combine all stocks into one DataFrame
+df = pd.DataFrame(data)
 
-def calculate_sharpe_ratio(data):
-    sharpe = (data["Daily Return"].mean() / data["Daily Return"].std()) * np.sqrt(252)
-    return sharpe
+# ------------------------
+# DAILY RETURNS
+# ------------------------
+daily_returns = df.pct_change().dropna()
 
-def get_high_low(data):
-    highest = data["Adj Close"].max()
-    lowest = data["Adj Close"].min()
-    return highest, lowest
+# ------------------------
+# SHARPE RATIOS (annualized, risk-free rate = 0)
+# ------------------------
+sharpe_ratios = (daily_returns.mean() / daily_returns.std()) * np.sqrt(252)
 
-def plot_chart(data, stock_name):
-    plt.figure()
-    plt.plot(data["Adj Close"])
-    plt.title(stock_name + " Price Trend (March 2026)")
-    plt.xlabel("Date")
-    plt.ylabel("Price ($)")
-    plt.show()
+# ------------------------
+# HIGHS AND LOWS
+# ------------------------
+highs = df.max()
+lows = df.min()
 
-def analyze_stock(name, ticker):
-    data = get_stock_data(ticker)
-    data = calculate_daily_returns(data)
+# ------------------------
+# INTERACTIVE FUNCTION
+# ------------------------
+def view_stock(stock_name, date):
+    if stock_name not in df.columns:
+        print("Stock not found!")
+        return
+    
+try:
+        price = df.loc[date, stock_name]
+        daily_return = daily_returns.loc[date, stock_name]
+        sharpe = sharpe_ratios[stock_name]
+        high = highs[stock_name]
+        low = lows[stock_name]
 
-  sharpe = calculate_sharpe_ratio(data)
-    high, low = get_high_low(data)
+print(f"----- {stock_name} on {date} -----")
+        print(f"Price for 1 share: ${price:.2f}")
+        print(f"Daily Return: {daily_return*100:.2f}%")
+        print(f"Sharpe Ratio (annualized): {sharpe:.2f}")
+        print(f"Highest Price in March: ${high:.2f}")
+        print(f"Lowest Price in March: ${low:.2f}")
+        print("-------------------------------")
 
-  print("\nStock:", name)
-    print("Sharpe Ratio:", sharpe)
-    print("Highest Price:", high)
-    print("Lowest Price:", low)
+# Plot the stock price chart
+df[stock_name].plot(title=f"{stock_name} Price March 2026")
+        plt.xlabel("Date")
+        plt.ylabel("Price ($)")
+        plt.show()
 
-  plot_chart(data, name)
+ except KeyError:
+        print("Date not available in the dataset!")
 
-def main():
-    print("Stock Analyzer")
+# ------------------------
+# EXAMPLE USAGE
+# ------------------------
+# Pick a stock and a date
+stock_to_check = "Amazon"
+date_to_check = "2026-03-15"
 
-  for name, ticker in stocks.items():
-        analyze_stock(name, ticker)
-
-main()
+view_stock(stock_to_check, date_to_check)
