@@ -2,9 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# ==========================
 # STOCK LIST
-# ==========================
 stocks = [
     "🍎 Apple",
     "🛒 Amazon",
@@ -18,15 +16,11 @@ stocks = [
     "📺 Netflix"
 ]
 
-# ==========================
-# CREATE MANUAL DATAFRAME
-# ==========================
+# CREATE DATAFRAME FOR MARCH 2026
 dates = pd.date_range(start="2026-03-01", end="2026-03-30")
 df = pd.DataFrame(index=dates, columns=stocks)
 
-# ==========================
-# FUNCTION TO ENTER PRICE FOR A SPECIFIC STOCK AND DATE
-# ==========================
+# FUNCTION TO ENTER PRICE MANUALLY
 def enter_price(stock_name, date):
     while True:
         try:
@@ -34,64 +28,65 @@ def enter_price(stock_name, date):
             df.at[date, stock_name] = price
             break
         except ValueError:
-            print("⚠️ Please enter a valid number.")
+            print("⚠️ Invalid input! Please enter a number.")
 
-# ==========================
-# INTERACTIVE VIEW FUNCTION
-# ==========================
-def quantview_interactive():
+# INTERACTIVE TOOL
+def quantview():
     print("\n🎉 Welcome to QuantView! Track your stocks from March 2026.\n")
-    while True:
-        print("📈 Available stocks:")
-        for s in stocks:
-            print("-", s)
-stock_name = input("\nEnter stock name (or type 'exit' to quit): ")
-        if stock_name.lower() == "exit":
-            print("👋 Thanks for using QuantView! Goodbye!")
-            break
+
+while True:
+print("📈 Available stocks:")
+for s in stocks:
+     print("-", s)
+stock_name = input("\nEnter stock name (or 'exit' to quit): ")
+if stock_name.lower() == "exit":
+    print("👋 Thanks for using QuantView! Goodbye!")
+    break
 if stock_name not in stocks:
-            print("⚠️ Stock not found! Try again.\n")
-            continue
+        print("⚠️ Stock not found! Try again.\n")
+    continue
 
 date_input = input("📅 Enter date (YYYY-MM-DD, e.g., 2026-03-15): ")
         try:
-            date = pd.Timestamp(date_input)
-            if date not in df.index:
-                print("⚠️ Date out of range. Please pick between 2026-03-01 and 2026-03-30.\n")
+    date = pd.Timestamp(date_input)
+    if date not in df.index:
+        print("⚠️ Date out of range. Please pick between 2026-03-01 and 2026-03-30.\n")
                 continue
 except:
-            print("⚠️ Invalid date format. Try again.\n")
+    print("⚠️ Invalid date format. Try again.\n")
             continue
 
-# Prompt for price if missing
+# Enter price if missing
 if pd.isna(df.at[date, stock_name]):
             enter_price(stock_name, date)
 
- # Calculate daily return if previous day exists
-prev_date_idx = df.index.get_loc(date) - 1
-        if prev_date_idx >= 0 and not pd.isna(df.iloc[prev_date_idx][stock_name]):
-            prev_price = df.iloc[prev_date_idx][stock_name]
-            daily_return = (df.at[date, stock_name] - prev_price) / prev_price
+# Daily return
+prev_idx = df.index.get_loc(date) - 1
+     if prev_idx >= 0 and not pd.isna(df.iloc[prev_idx][stock_name]):
+        prev_price = df.iloc[prev_idx][stock_name]
+        daily_return = (df.at[date, stock_name] - prev_price) / prev_price
         else:
             daily_return = np.nan
 
-        high = df[stock_name].max()
-        low = df[stock_name].min()
-        price = df.at[date, stock_name]
- # Display info with emojis
- print(f"\n🌟========== QuantView ==========")
-print(f"📌 Stock: {stock_name}")
-print(f"🗓 Date: {date.date()}")
-print(f"💵 Price for 1 share: ${price}")
+ # High / low
+high = df[stock_name].max()
+low = df[stock_name].min()
+price = df.at[date, stock_name]
+
+# Print info
+print(f"\n🌟========== QuantView ==========")
+        print(f"📌 Stock: {stock_name}")
+        print(f"🗓 Date: {date.date()}")
+        print(f"💵 Price for 1 share: ${price}")
         if not np.isnan(daily_return):
- print(f"📊 Daily Return: {daily_return*100:.2f}%")
-    else:
-print("📊 Daily Return: N/A (first day or missing previous price)")
+            print(f"📊 Daily Return: {daily_return*100:.2f}%")
+        else:
+            print("📊 Daily Return: N/A (first day or missing previous price)")
         print(f"⬆️ Highest Price in Month: ${high}")
         print(f"⬇️ Lowest Price in Month: ${low}")
         print(f"🌟==============================\n")
 
-# Plot chart - colorful and fun
+# Plot chart
 plt.figure(figsize=(12,6))
         plt.plot(df[stock_name], color="#ff7f0e", linewidth=3, marker='o', markersize=6, label=stock_name)
         plt.title(f"📈 QuantView: {stock_name} Price March 2026", fontsize=16, fontweight='bold', color="#2c3e50")
@@ -103,7 +98,6 @@ plt.figure(figsize=(12,6))
         plt.tight_layout()
         plt.show()
 
-# ==========================
-# RUN THE INTERACTIVE TOOL
-# ==========================
-quantview_interactive()
+# RUN TOOL
+if __name__ == "__main__":
+    quantview()
