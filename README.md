@@ -1,91 +1,109 @@
-import yfinance as yf
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-# ------------------------
+# ==========================
 # STOCK LIST
-# ------------------------
-stocks = {
-    "Apple": "AAPL",
-    "Amazon": "AMZN",
-    "Nvidia": "NVDA",
-    "Google": "GOOGL",
-    "Walmart": "WMT",
-    "Louis Vuitton": "MC.PA",
-    "Tesla": "TSLA",
-    "JP Morgan": "JPM",
-    "Costco": "COST",
-    "Netflix": "NFLX"
-}
+# ==========================
+stocks = [
+    "🍎 Apple",
+    "🛒 Amazon",
+    "💻 Nvidia",
+    "🔍 Google",
+    "🏪 Walmart",
+    "👑 Louis Vuitton",
+    "🚗 Tesla",
+    "🏦 JP Morgan",
+    "🛍️ Costco",
+    "📺 Netflix"
+]
 
-# ------------------------
-# DOWNLOAD HISTORICAL DATA
-# ------------------------
-start_date = "2026-03-01"
-end_date = "2026-03-30"
+# ==========================
+# CREATE MANUAL DATAFRAME
+# ==========================
+dates = pd.date_range(start="2026-03-01", end="2026-03-30")
+df = pd.DataFrame(index=dates, columns=stocks)
 
-data = {}
-for name, ticker in stocks.items():
-    stock_data = yf.download(ticker, start=start_date, end=end_date)
-    data[name] = stock_data['Adj Close']
+# ==========================
+# FUNCTION TO ENTER PRICE FOR A SPECIFIC STOCK AND DATE
+# ==========================
+def enter_price(stock_name, date):
+    while True:
+        try:
+            price = float(input(f"💰 Enter price for {stock_name} on {date.date()}: $"))
+            df.at[date, stock_name] = price
+            break
+        except ValueError:
+            print("⚠️ Please enter a valid number.")
 
-# Combine all stocks into one DataFrame
-df = pd.DataFrame(data)
+# ==========================
+# INTERACTIVE VIEW FUNCTION
+# ==========================
+def quantview_interactive():
+    print("\n🎉 Welcome to QuantView! Track your stocks from March 2026.\n")
+    while True:
+        print("📈 Available stocks:")
+        for s in stocks:
+            print("-", s)
+stock_name = input("\nEnter stock name (or type 'exit' to quit): ")
+        if stock_name.lower() == "exit":
+            print("👋 Thanks for using QuantView! Goodbye!")
+            break
+if stock_name not in stocks:
+            print("⚠️ Stock not found! Try again.\n")
+            continue
 
-# ------------------------
-# DAILY RETURNS
-# ------------------------
-daily_returns = df.pct_change().dropna()
+date_input = input("📅 Enter date (YYYY-MM-DD, e.g., 2026-03-15): ")
+        try:
+            date = pd.Timestamp(date_input)
+            if date not in df.index:
+                print("⚠️ Date out of range. Please pick between 2026-03-01 and 2026-03-30.\n")
+                continue
+except:
+            print("⚠️ Invalid date format. Try again.\n")
+            continue
 
-# ------------------------
-# SHARPE RATIOS (annualized, risk-free rate = 0)
-# ------------------------
-sharpe_ratios = (daily_returns.mean() / daily_returns.std()) * np.sqrt(252)
+# Prompt for price if missing
+if pd.isna(df.at[date, stock_name]):
+            enter_price(stock_name, date)
 
-# ------------------------
-# HIGHS AND LOWS
-# ------------------------
-highs = df.max()
-lows = df.min()
+ # Calculate daily return if previous day exists
+prev_date_idx = df.index.get_loc(date) - 1
+        if prev_date_idx >= 0 and not pd.isna(df.iloc[prev_date_idx][stock_name]):
+            prev_price = df.iloc[prev_date_idx][stock_name]
+            daily_return = (df.at[date, stock_name] - prev_price) / prev_price
+        else:
+            daily_return = np.nan
 
-# ------------------------
-# INTERACTIVE FUNCTION
-# ------------------------
-def view_stock(stock_name, date):
-    if stock_name not in df.columns:
-        print("Stock not found!")
-        return
-    
-try:
-        price = df.loc[date, stock_name]
-        daily_return = daily_returns.loc[date, stock_name]
-        sharpe = sharpe_ratios[stock_name]
-        high = highs[stock_name]
-        low = lows[stock_name]
+        high = df[stock_name].max()
+        low = df[stock_name].min()
+        price = df.at[date, stock_name]
+ # Display info with emojis
+ print(f"\n🌟========== QuantView ==========")
+print(f"📌 Stock: {stock_name}")
+print(f"🗓 Date: {date.date()}")
+print(f"💵 Price for 1 share: ${price}")
+        if not np.isnan(daily_return):
+ print(f"📊 Daily Return: {daily_return*100:.2f}%")
+    else:
+print("📊 Daily Return: N/A (first day or missing previous price)")
+        print(f"⬆️ Highest Price in Month: ${high}")
+        print(f"⬇️ Lowest Price in Month: ${low}")
+        print(f"🌟==============================\n")
 
-print(f"----- {stock_name} on {date} -----")
-        print(f"Price for 1 share: ${price:.2f}")
-        print(f"Daily Return: {daily_return*100:.2f}%")
-        print(f"Sharpe Ratio (annualized): {sharpe:.2f}")
-        print(f"Highest Price in March: ${high:.2f}")
-        print(f"Lowest Price in March: ${low:.2f}")
-        print("-------------------------------")
-
-# Plot the stock price chart
-df[stock_name].plot(title=f"{stock_name} Price March 2026")
-        plt.xlabel("Date")
-        plt.ylabel("Price ($)")
+# Plot chart - colorful and fun
+plt.figure(figsize=(12,6))
+        plt.plot(df[stock_name], color="#ff7f0e", linewidth=3, marker='o', markersize=6, label=stock_name)
+        plt.title(f"📈 QuantView: {stock_name} Price March 2026", fontsize=16, fontweight='bold', color="#2c3e50")
+        plt.xlabel("Date", fontsize=12, color="#34495e")
+        plt.ylabel("Price ($)", fontsize=12, color="#34495e")
+        plt.grid(True, linestyle='--', alpha=0.5)
+        plt.xticks(rotation=45)
+        plt.legend()
+        plt.tight_layout()
         plt.show()
 
- except KeyError:
-        print("Date not available in the dataset!")
-
-# ------------------------
-# EXAMPLE USAGE
-# ------------------------
-# Pick a stock and a date
-stock_to_check = "Amazon"
-date_to_check = "2026-03-15"
-
-view_stock(stock_to_check, date_to_check)
+# ==========================
+# RUN THE INTERACTIVE TOOL
+# ==========================
+quantview_interactive()
