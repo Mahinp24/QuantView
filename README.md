@@ -1,124 +1,110 @@
-import pandas as pd
-import numpy as np
+# ==========================
+# QUANTVIEW - SIMPLE STOCK ANALYZER
+# No external libraries required
+# ==========================
 
-# ==========================
 # STOCK LIST
-# ==========================
-stocks = {
-    "Apple 🍎": "AAPL",
-    "Amazon 🛒": "AMZN",
-    "Nvidia 💻": "NVDA",
-    "Google 🔍": "GOOGL",
-    "Walmart 🏪": "WMT",
-    "Louis Vuitton 👑": "MC.PA",
-    "Tesla 🚗": "TSLA",
-    "JP Morgan 🏦": "JPM",
-    "Costco 🛍️": "COST",
-    "Netflix 📺": "NFLX"
+STOCKS = {
+    "1": "Apple 🍎",
+    "2": "Amazon 🛒",
+    "3": "Nvidia 💻",
+    "4": "Google 🔍",
+    "5": "Walmart 🏪",
+    "6": "Louis Vuitton 👑",
+    "7": "Tesla 🚗",
+    "8": "JP Morgan 🏦",
+    "9": "Costco 🛍️",
+    "10": "Netflix 📺"
 }
 
-# ==========================
-# CREATE EMPTY DATA (YOU FILL LATER)
-# ==========================
-dates = pd.date_range("2026-03-01", "2026-03-30")
-df = pd.DataFrame(index=dates, columns=stocks.keys())
+# STORAGE FOR USER INPUT DATA
+data_store = {}
 
 # ==========================
-# INPUT PRICE FUNCTION
+# SIGNAL FUNCTION
 # ==========================
-def input_price(stock, date):
-    while True:
-        try:
-            price = float(input(f"💰 Enter price for {stock} on {date.date()}: $"))
-            df.loc[date, stock] = price
-            return price
-        except:
-            print("❌ Invalid number, try again.")
-
-# ==========================
-# BUY / SELL SIGNAL (SIMPLE LOGIC)
-# ==========================
-def signal(current, low, high):
-    if current <= low * 1.05:
-        return "🟢 BUY (near monthly low)"
-    elif current >= high * 0.95:
-        return "🔴 SELL (near monthly high)"
+def get_signal(price, low, high):
+    if price <= low * 1.05:
+        return "🟢 BUY (undervalued zone)"
+    elif price >= high * 0.95:
+        return "🔴 SELL (overvalued zone)"
     else:
-        return "🟡 HOLD"
+        return "🟡 HOLD (neutral zone)"
+
+# ==========================
+# INPUT STOCK DATA
+# ==========================
+def input_data(stock_name):
+    print("\n📊 Enter market data for", stock_name)
+
+ price = float(input("💰 Current price (1 share): $"))
+    high = float(input("📈 Highest price: $"))
+    low = float(input("📉 Lowest price: $"))
+
+ratio = (price - low) / (high - low + 0.000001)
+
+data_store[stock_name] = {
+        "price": price,
+        "high": high,
+        "low": low,
+        "ratio": ratio
+    }
+
+# ==========================
+# DISPLAY REPORT
+# ==========================
+def show_report(stock_name):
+    d = data_store[stock_name]
+
+ print("\n" + "=" * 40)
+    print(f"📊 QUANTVIEW ANALYSIS: {stock_name}")
+    print("=" * 40)
+    print(f"💰 Price (1 share): ${d['price']:.2f}")
+    print(f"📈 Highest Price: ${d['high']:.2f}")
+    print(f"📉 Lowest Price: ${d['low']:.2f}")
+    print(f"📊 Strength Ratio: {d['ratio']:.3f}")
+    print(f"📍 Recommendation: {get_signal(d['price'], d['low'], d['high'])}")
+    print("=" * 40 + "\n")
+
+# ==========================
+# MENU DISPLAY
+# ==========================
+def show_menu():
+    print("\n📊 QUANTVIEW STOCK ANALYZER")
+    print("-" * 40)
+ for key in STOCKS:
+        print(f"{key}. {STOCKS[key]}")
+print("0. Exit")
 
 # ==========================
 # MAIN PROGRAM
 # ==========================
-def quantview():
+def main():
+    print("\n🚀 Welcome to QuantView")
+    print("Simple Stock Decision System\n")
 
-print("\n📊 WELCOME TO QUANTVIEW 📊")
-    print("Track stock prices, trends, and signals (March 2026)\n")
-    while True:
+while True:
+        show_menu()
 
-  # ================= STOCK SELECTION =================
- print("\n📈 Select a stock:")
-        stock_list = list(stocks.keys())
+choice = input("\nSelect a stock number: ")
 
-for i, s in enumerate(stock_list):
-            print(f"{i+1}. {s}")
+if choice == "0":
+            print("\n👋 Exiting QuantView... Goodbye!")
+            break
 
-print("0. Exit")
-
-try:
-            choice = int(input("\nEnter stock number: "))
-            if choice == 0:
-                print("👋 Exiting QuantView...")
-                break
-            stock = stock_list[choice - 1]
-        except:
-            print("❌ Invalid selection")
+if choice not in STOCKS:
+            print("❌ Invalid choice. Try again.")
             continue
 
- # ================= DATE SELECTION =================
-print("\n📅 Enter date (2026-03-01 to 2026-03-30)")
-        date_input = input("Format YYYY-MM-DD: ")
+stock_name = STOCKS[choice]
 
-try:
-            date = pd.Timestamp(date_input)
-            if date not in df.index:
-                print("❌ Date not in range")
-                continue
-        except:
-            print("❌ Invalid date format")
-            continue
+# If not entered yet, request data
+if stock_name not in data_store:
+            input_data(stock_name)
 
- # ================= PRICE INPUT =================
-if pd.isna(df.loc[date, stock]):
-            price = input_price(stock, date)
-        else:
-            price = df.loc[date, stock]
+# Show results
+ show_report(stock_name)
 
- # ================= CALCULATIONS =================
- col = df[stock]
-
-low = col.min()
-high = col.max()
-
- prev_idx = df.index.get_loc(date) - 1
-        if prev_idx >= 0 and not pd.isna(col.iloc[prev_idx]):
-            prev_price = col.iloc[prev_idx]
-            daily_return = ((price - prev_price) / prev_price) * 100
-        else:
-            daily_return = 0
-
-  # ================= OUTPUT =================
- print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        print(f"📊 QUANTVIEW REPORT: {stock}")
-        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        print(f"📅 Date: {date.date()}")
-        print(f"💰 Price (1 share): ${price:.2f}")
-        print(f"📊 Daily Return: {daily_return:.2f}%")
-        print(f"📈 Monthly High: ${high}")
-        print(f"📉 Monthly Low: ${low}")
-        print(f"📍 Signal: {signal(price, low, high)}")
-        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-
-# ==========================
 # RUN PROGRAM
-# ==========================
-quantview()
+if __name__ == "__main__":
+    main()
