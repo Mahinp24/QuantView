@@ -1,10 +1,8 @@
 # ==========================
-# QUANTVIEW - SIMPLE STOCK ANALYZER
-# No external libraries required
+# QUANTVIEW MEMORY SYSTEM
 # ==========================
 
-# STOCK LIST
-STOCKS = {
+stocks = {
     "1": "Apple 🍎",
     "2": "Amazon 🛒",
     "3": "Nvidia 💻",
@@ -17,94 +15,101 @@ STOCKS = {
     "10": "Netflix 📺"
 }
 
-# STORAGE FOR USER INPUT DATA
-data_store = {}
+# STORAGE (memory system)
+stock_memory = {}
 
 # ==========================
-# SIGNAL FUNCTION
+# SIGNAL LOGIC
 # ==========================
-def get_signal(price, low, high):
+def signal(price, low, high):
     if price <= low * 1.05:
-        return "🟢 BUY (undervalued zone)"
+        return "🟢 BUY (undervalued)"
     elif price >= high * 0.95:
-        return "🔴 SELL (overvalued zone)"
+        return "🔴 SELL (overvalued)"
     else:
-        return "🟡 HOLD (neutral zone)"
+        return "🟡 HOLD (stable)"
 
 # ==========================
-# INPUT STOCK DATA
+# INPUT DATA (STORE ONCE)
 # ==========================
 def input_data(stock_name):
-    print("\n📊 Enter market data for", stock_name)
+    print(f"\n📥 Enter data for {stock_name}")
 
- price = float(input("💰 Current price (1 share): $"))
-    high = float(input("📈 Highest price: $"))
-    low = float(input("📉 Lowest price: $"))
+price = float(input("💰 Price (1 share): $"))
+high = float(input("📈 Highest price: $"))
+low = float(input("📉 Lowest price: $"))
 
-ratio = (price - low) / (high - low + 0.000001)
+ratio = (price - low) / (high - low + 1e-9)
 
-data_store[stock_name] = {
+# STORE IN MEMORY
+stock_memory[stock_name] = {
         "price": price,
         "high": high,
         "low": low,
         "ratio": ratio
     }
 
-# ==========================
-# DISPLAY REPORT
-# ==========================
-def show_report(stock_name):
-    d = data_store[stock_name]
+print("✅ Data saved successfully!\n")
 
- print("\n" + "=" * 40)
+# ==========================
+# RECALL DATA (MAIN FEATURE)
+# ==========================
+def show_data(stock_name):
+
+data = stock_memory[stock_name]
+
+ print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     print(f"📊 QUANTVIEW ANALYSIS: {stock_name}")
-    print("=" * 40)
-    print(f"💰 Price (1 share): ${d['price']:.2f}")
-    print(f"📈 Highest Price: ${d['high']:.2f}")
-    print(f"📉 Lowest Price: ${d['low']:.2f}")
-    print(f"📊 Strength Ratio: {d['ratio']:.3f}")
-    print(f"📍 Recommendation: {get_signal(d['price'], d['low'], d['high'])}")
-    print("=" * 40 + "\n")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print(f"💰 1 Share Price: ${data['price']:.2f}")
+    print(f"📈 Highest: ${data['high']:.2f}")
+    print(f"📉 Lowest: ${data['low']:.2f}")
+    print(f"📊 Strength Ratio: {data['ratio']:.3f}")
+    print(f"📍 Signal: {signal(data['price'], data['low'], data['high'])}")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
 # ==========================
-# MENU DISPLAY
+# MENU
 # ==========================
-def show_menu():
-    print("\n📊 QUANTVIEW STOCK ANALYZER")
+def menu():
+    print("\n📊 QUANTVIEW STOCK SYSTEM")
     print("-" * 40)
- for key in STOCKS:
-        print(f"{key}. {STOCKS[key]}")
+
+for key in stocks:
+        print(f"{key}. {stocks[key]}")
+
 print("0. Exit")
 
 # ==========================
-# MAIN PROGRAM
+# MAIN LOOP
 # ==========================
-def main():
-    print("\n🚀 Welcome to QuantView")
-    print("Simple Stock Decision System\n")
+def quantview():
+
+print("\n🚀 Welcome to QuantView Memory System")
+    print("Store data once → recall anytime\n")
 
 while True:
-        show_menu()
 
-choice = input("\nSelect a stock number: ")
+ menu()
+        choice = input("\nSelect a stock number: ")
 
 if choice == "0":
-            print("\n👋 Exiting QuantView... Goodbye!")
+            print("👋 Exiting QuantView...")
             break
 
-if choice not in STOCKS:
-            print("❌ Invalid choice. Try again.")
+ if choice not in stocks:
+            print("❌ Invalid selection\n")
             continue
 
-stock_name = STOCKS[choice]
+stock_name = stocks[choice]
 
-# If not entered yet, request data
-if stock_name not in data_store:
+# IF NOT STORED → INPUT DATA
+if stock_name not in stock_memory:
             input_data(stock_name)
 
-# Show results
- show_report(stock_name)
+ # ALWAYS RECALL DATA
+ show_data(stock_name)
 
 # RUN PROGRAM
 if __name__ == "__main__":
-    main()
+    quantview()
